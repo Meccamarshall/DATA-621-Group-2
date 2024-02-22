@@ -1,0 +1,95 @@
+---
+title: "DATA 621 HW 1"
+author: "Jian Quan Chen"
+date: "2024-02-22"
+output: html_document
+---
+
+# Introduction
+
+In this assignment, we are given a baseball training and evaluation dataset. The data spans from 1871 to 2006, each row representing a baseball team's performance that year. The statistics were all adjusted to reflect a 162 game season. Our objective is to construct a multiple linear regression model of the training data to predict the number of wins for a team. 
+
+# 1. Data Exploration
+
+```{r}
+library(tidyverse)
+library(corrplot)
+```
+
+```{r}
+df <- read_csv("https://raw.githubusercontent.com/LeJQC/DATA-621-Group-2/main/HW1/moneyball-training-data.csv")
+```
+
+There are 2,276 rows and 17 columns in the dataset. The response variable is `TARGET_WINS` and the remaining 15 variables, with the exception of the `INDEX` column, are predictor variables. 
+```{r}
+glimpse(df)
+```
+
+```{r}
+# Setting index column to index
+rownames(df) <- df$INDEX
+df$INDEX <- NULL
+
+# Sumarry table
+knitr::kable(summary(df))
+```
+
+We can see from the summary, that the mean of `TARGET_WINS` is 80.79, which is about half the games in a baseball season. There are also a couple of columns with NA values, specifically `TEAM_BATTING_HBP` has over 2000 missing values. 
+
+Let's look at the distribution of the data.
+```{r}
+df_long <- df %>%
+  pivot_longer(
+    cols = everything(), 
+    names_to = "variable",
+    values_to = "value"
+  )
+
+df_long %>%
+  ggplot(aes(value)) + 
+  geom_density(fill = "blue") + 
+  facet_wrap(~variable, scales ="free", ncol = 4) +
+  labs(x = element_blank(), y = element_blank())
+```
+
+The `TARGET_WINS`, `TEAM_BATTING_2B`, `TEAM_BATTING_HBP`, and `TEAM_FIELDING_DP`  variables show a normal distribution. The `TEAM_BATTING_HR`, `TEAM_BATTING_SO`, and `TEAM_PITCHING_HR` variables show a bimodal distribution.
+
+```{r}
+df %>% 
+  cor(use = "complete.obs") %>%
+  corrplot(method = "color", tl.col = "black")
+```
+
+From this visual, wins seem to be most correlated with `TEAM_PITCHING_H`, `TEAM_PTICHING_BB`,`TEAM_BATTING_BB`, `TEAM_BATTING_2B`, and `TEAM_BATTING_H`.
+
+```{r}
+cor(df)
+```
+
+# 2. Data Preparation
+
+Since the `TEAM_BATTING_HBP` variable was missing 2000 values, we will just remove this column from the dataset. The other columns that had missing values (`TEAM_BATTING_SO`, `TEAM_BASERUN_SB`, `TEAM_BASERUN_CS`, `TEAM_PITCHING_SO`, and `TEAM_FIELDING_DP`) will be replaced with the median value of that variable. 
+
+```{r}
+df <- df %>% select(-TEAM_BATTING_HBP)
+
+na_variables <- c("TEAM_BATTING_SO", "TEAM_BASERUN_SB", "TEAM_BASERUN_CS", "TEAM_PITCHING_SO", "TEAM_FIELDING_DP")
+
+for (col in na_variables) {
+  median_value <- median(df[[col]], na.rm = TRUE)
+  df[[col]][is.na(df[[col]])] <- median_value
+}
+
+summary(df)
+```
+
+
+
+
+
+
+
+
+
+
+
