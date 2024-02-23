@@ -17,7 +17,7 @@ library(corrplot)
 ```
 
 ```{r}
-df <- read_csv("https://raw.githubusercontent.com/LeJQC/DATA-621-Group-2/main/HW1/moneyball-training-data.csv")
+df <- read_csv("https://raw.githubusercontent.com/LeJQC/DATA-621-Group-2/main/HW1/moneyball-training-data.csv", show_col_types = FALSE)
 ```
 
 There are 2,276 rows and 17 columns in the dataset. The response variable is `TARGET_WINS` and the remaining 15 variables, with the exception of the `INDEX` column, are predictor variables. 
@@ -67,6 +67,16 @@ cor(df)
 ```
 
 # 2. Data Preparation
+Checking for missing values within the dataset by creating flags for every column
+```{r}
+# Loop through columns
+for (col_name in names(df)) {
+  missing <- is.na(df[[col_name]])
+  output <- paste(col_name,"missing values?",any(missing))
+  print(output)
+}
+```
+
 
 Since the `TEAM_BATTING_HBP` variable was missing 2000 values, we will just remove this column from the dataset. The other columns that had missing values (`TEAM_BATTING_SO`, `TEAM_BASERUN_SB`, `TEAM_BASERUN_CS`, `TEAM_PITCHING_SO`, and `TEAM_FIELDING_DP`) will be replaced with the median value of that variable. 
 
@@ -84,9 +94,16 @@ summary(df)
 ```
 
 
+Checking for any missing values within the dataset
+```{r}
+which(is.na(df))
+ 
+# count total missing values 
+print("Count of total missing values  ")
+sum(is.na(df))
+```
 
-
-
+Now there is no more missing values within the dataset
 
 
 
