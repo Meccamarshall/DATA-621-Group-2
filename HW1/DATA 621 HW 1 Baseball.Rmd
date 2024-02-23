@@ -105,7 +105,20 @@ sum(is.na(df))
 
 Now there is no more missing values within the dataset
 
+## Buid Models
 
+Lets build a multiple linear regression model with the response variable being TARGET_WINS ans the explanatory variables being TEAM_BATTING_H, TEAM_BATTING_BB, and TEAM_BATTING_2B this is because they had the higher correlation values to the TARGET_WINS variable. I omitted the intercept within the model because if the intercept in a regression model predicting baseball team wins is negative, it suggests that even when all independent variables are set to zero, the model predicts a negative number of wins. This negative prediction essentially indicates that the team is expected to have more losses than wins, which is not realistic or meaningful in the context of baseball. 
+```{r}
+##Fit the multiple linear regression model
+model <- lm(TARGET_WINS ~ TEAM_BATTING_H + TEAM_BATTING_BB + TEAM_BATTING_2B+0, data = df)
+
+summary(model)
+```
+The coefficients obtained from our multiple linear regression model shed light on the relationship between specific baseball metrics and the number of wins. For instance, the coefficient for "TEAM_BATTING_H" (Base Hits by batters) is approximately 0.044, indicating that for each additional base hit, we expect around 0.044 more wins, holding other variables constant. Similarly, the coefficient for "TEAM_BATTING_BB" (Walks allowed) is approximately 0.034, suggesting that each additional walk allowed by the pitching team is associated with around 0.034 more wins.
+
+However, the coefficient for "TEAM_BATTING_2B" (Doubles by batters) is approximately -0.003, which is statistically insignificant (p-value = 0.679). This suggests that the number of doubles by batters may not have a significant effect on wins. This finding may appear counterintuitive, as one might expect teams with more doubles to win more games.
+
+Despite this inconsistency, the overall model demonstrates a strong ability to explain win variance, with an adjusted R-squared value of 0.9714. This indicates that the model accounts for a significant portion of the variability in wins based on the included variables. Therefore, it may be advisable to retain the model for further analysis and refinement.
 
 
 
