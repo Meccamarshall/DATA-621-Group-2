@@ -122,19 +122,26 @@ Now there is no more missing values within the dataset.
 
 # Build Models
 
-### Model 1
-For this model, we are going to use the three variables that were most linearly correlated to target wins: `TEAM_BATTING_H` (0.39), `TEAM_BATTING_2B` (0.29), `TEAM_BATTING_BB` (0.23).
 
+### Model 1
+
+Lets build a multiple linear regression model with the response variable being TARGET_WINS ans the explanatory variables being TEAM_BATTING_H, TEAM_BATTING_BB, and TEAM_BATTING_2B this is because they had the higher correlation values to the TARGET_WINS variable. I omitted the intercept within the model because if the intercept in a regression model predicting baseball team wins is negative, it suggests that even when all independent variables are set to zero, the model predicts a negative number of wins. This negative prediction essentially indicates that the team is expected to have more losses than wins, which is not realistic or meaningful in the context of baseball. 
 ```{r}
-model <- lm(TARGET_WINS ~ TEAM_BATTING_H + TEAM_BATTING_2B + TEAM_BATTING_BB, data = df)
+##Fit the multiple linear regression model
+model <- lm(TARGET_WINS ~ TEAM_BATTING_H + TEAM_BATTING_BB + TEAM_BATTING_2B+0, data = df)
 
 summary(model)
 ```
-The coefficient estimate for `TEAM_BATTING_H` is 0.045218, which means that each hit by a batter will increase the `TARGET_WINS` by 0.045. In addition, the coefficient estimate for `TEAM_BATTING_BB` is 0.034136, which indicates that every walk by a batter increases the `TARGET_WINS` by 0.034. Both `TEAM_BATTING_H` and `TEAM_BATTING_BB` have a p-value less than 0.05 so they are statistically significant in predicting the number of wins. On the other hand,  `TEAM_BATTING_2B` has a coefficient of -0.04206 with a p-value of 0.603. The negative coefficient suggests that the more doubles a team has, the lower amount of wins. However, since the p-value is so high, we cannot say there is a relationship between the number of doubles and the number of wins. 
+The coefficients obtained from our multiple linear regression model shed light on the relationship between specific baseball metrics and the number of wins. For instance, the coefficient for "TEAM_BATTING_H" (Base Hits by batters) is approximately 0.044, indicating that for each additional base hit, we expect around 0.044 more wins, holding other variables constant. Similarly, the coefficient for "TEAM_BATTING_BB" (Walks allowed) is approximately 0.034, suggesting that each additional walk allowed by the pitching team is associated with around 0.034 more wins.
 
+However, the coefficient for "TEAM_BATTING_2B" (Doubles by batters) is approximately -0.003, which is statistically insignificant (p-value = 0.679). This suggests that the number of doubles by batters may not have a significant effect on wins. This finding may appear counterintuitive, as one might expect teams with more doubles to win more games.
+
+Despite this inconsistency, the overall model demonstrates a strong ability to explain win variance, with an adjusted R-squared value of 0.9714. This indicates that the model accounts for a significant portion of the variability in wins based on the included variables. Therefore, it may be advisable to retain the model for further analysis and refinement.
 The residual standard error of 13.92 indicates that the typical difference between the observed and predicted number of wins is 14 wins. This error is relatively large considering the average wins is 80.79. Also, the Multiple R-squared value of 0.2196 indicates that about 22% of the variability in wins can be explained by this multiple linear regression model. Lastly, the p-value of the model is <2.2e-16, signifies that this model is statistically significant in predicting the number of wins.
-
 In summary, while this model is statistically significant in predicting the number of wins, we would not use it as the R-squared is low at 0.22 and the standard error is relatively high. Although it makes sense that the increasing the number of hits (`TEAM_BATTING_H`) and walks(`TEAM_BATTING_BB`) increases the amount of wins, it is odd that increasing the amount of doubles decreases the total wins. 
+
+
+
 
 ##### Residual Analysis
 ```{r}
