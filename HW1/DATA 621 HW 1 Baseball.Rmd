@@ -2,17 +2,24 @@
 title: "DATA 621 HW 1"
 author: "Jian Quan Chen"
 date: "2024-02-22"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
+
+```{r include=FALSE, }
+knitr::opts_chunk$set(echo=FALSE,warning = FALSE, message = FALSE)
+```
 
 # Introduction
 
-In this assignment, we are given a baseball training and evaluation dataset. The data spans from 1871 to 2006, each row representing a baseball team's performance that year. The statistics were all adjusted to reflect a 162 game season. Our objective is to construct a multiple linear regression model of the training data to predict the number of wins for a team. 
+In this assignment, we are given a baseball training and evaluation dataset, which contains approximately 2200 records. The data spans from 1871 to 2006, with each row representing a baseball team's performance from that year. The statistics were all adjusted to reflect a 162 game season. Our objective is to construct a multiple linear regression model of the training data to predict the number of wins for a team.
 
 # 1. Data Exploration
 
-```{r}
+```{r warning=FALSE}
 library(tidyverse)
+library(psych)
 library(corrplot)
 ```
 
@@ -20,24 +27,34 @@ library(corrplot)
 df <- read_csv("https://raw.githubusercontent.com/LeJQC/DATA-621-Group-2/main/HW1/moneyball-training-data.csv", show_col_types = FALSE)
 ```
 
-There are 2,276 rows and 17 columns in the dataset. The response variable is `TARGET_WINS` and the remaining 15 variables, with the exception of the `INDEX` column, are predictor variables. 
-```{r}
+### Glimpse of the data
+
+There are 2,276 rows and 17 columns in the dataset. The response variable is `TARGET_WINS` and the remaining 15 variables, with the exception of the `INDEX` column, are predictor variables.
+
+```{r warning=FALSE}
 glimpse(df)
 ```
+
+### Summary table
+
+We can see from the summary, that the mean of `TARGET_WINS` is 80.79, which is about half the games in a baseball season. There are also a couple of columns with NA values, specifically `TEAM_BATTING_HBP` has over 2000 missing values.
 
 ```{r}
 # Setting index column to index
 rownames(df) <- df$INDEX
 df$INDEX <- NULL
 
-# Sumarry table
-knitr::kable(summary(df))
+# Print summary table
+summary_table <- describe(df)
+
+print(round(summary_table,2))
 ```
 
-We can see from the summary, that the mean of `TARGET_WINS` is 80.79, which is about half the games in a baseball season. There are also a couple of columns with NA values, specifically `TEAM_BATTING_HBP` has over 2000 missing values. 
+### Distribution of variables
 
-Let's look at the distribution of the data.
-```{r}
+The `TARGET_WINS`, `TEAM_BATTING_2B`, `TEAM_BATTING_HBP`, and `TEAM_FIELDING_DP` variables show a normal distribution. The `TEAM_BATTING_HR`, `TEAM_BATTING_SO`, and `TEAM_PITCHING_HR` variables show a bimodal distribution.
+
+```{r warning=FALSE}
 df_long <- df %>%
   pivot_longer(
     cols = everything(), 
@@ -52,21 +69,18 @@ df_long %>%
   labs(x = element_blank(), y = element_blank())
 ```
 
-The `TARGET_WINS`, `TEAM_BATTING_2B`, `TEAM_BATTING_HBP`, and `TEAM_FIELDING_DP`  variables show a normal distribution. The `TEAM_BATTING_HR`, `TEAM_BATTING_SO`, and `TEAM_PITCHING_HR` variables show a bimodal distribution.
+### Correlation of variables
+
+From this visual, wins seem to be most linearly correlated with `TEAM_BATTING_H` (0.39), `TEAM_BATTING_2B` (0.29), `TEAM_BATTING_BB` (0.23), `TEAM_PITCHING_HR` (0.19), and `TEAM_BATTING_HR` (0.18).
 
 ```{r}
 df %>% 
-  cor(use = "complete.obs") %>%
-  corrplot(method = "color", tl.col = "black")
-```
-
-From this visual, wins seem to be most correlated with `TEAM_PITCHING_H`, `TEAM_PTICHING_BB`,`TEAM_BATTING_BB`, `TEAM_BATTING_2B`, and `TEAM_BATTING_H`.
-
-```{r}
-cor(df)
+  cor(use = "pairwise.complete.obs") %>%
+  corrplot(method = "color", type = "upper", tl.col = "black", diag = TRUE, number.cex = 0.5, addCoef.col = 'black', tl.srt = 50, col=colorRampPalette(c("#9c89b8","#f0a6ca","#b8bedd"))(200))
 ```
 
 # 2. Data Preparation
+
 Checking for missing values within the dataset by creating flags for every column
 ```{r}
 # Loop through columns
@@ -76,9 +90,12 @@ for (col_name in names(df)) {
   print(output)
 }
 ```
+```{r}
+# Checking for any missing values
+sapply(df, function(x) sum(is.na(x)))
+```
 
-
-Since the `TEAM_BATTING_HBP` variable was missing 2000 values, we will just remove this column from the dataset. The other columns that had missing values (`TEAM_BATTING_SO`, `TEAM_BASERUN_SB`, `TEAM_BASERUN_CS`, `TEAM_PITCHING_SO`, and `TEAM_FIELDING_DP`) will be replaced with the median value of that variable. 
+Since the `TEAM_BATTING_HBP` variable was missing 2000 values, we will just remove this column from the dataset. The other columns that had missing values (`TEAM_BATTING_SO`, `TEAM_BASERUN_SB`, `TEAM_BASERUN_CS`, `TEAM_PITCHING_SO`, and `TEAM_FIELDING_DP`) will be replaced with the median value of that variable.
 
 ```{r}
 df <- df %>% select(-TEAM_BATTING_HBP)
@@ -93,20 +110,45 @@ for (col in na_variables) {
 summary(df)
 ```
 
-
-Checking for any missing values within the dataset
+Checking for any missing values within the dataset.
 ```{r}
-which(is.na(df))
+#which(is.na(df))
  
-# count total missing values 
+# Count total missing values 
 print("Count of total missing values  ")
 sum(is.na(df))
 ```
+Now there is no more missing values within the dataset.
 
-Now there is no more missing values within the dataset
+# Build Models
 
+### Model 1
+For this model, we are going to use the three variables that were most linearly correlated to target wins: `TEAM_BATTING_H` (0.39), `TEAM_BATTING_2B` (0.29), `TEAM_BATTING_BB` (0.23).
 
+```{r}
+model <- lm(TARGET_WINS ~ TEAM_BATTING_H + TEAM_BATTING_2B + TEAM_BATTING_BB, data = df)
 
+summary(model)
+```
+The coefficient estimate for `TEAM_BATTING_H` is 0.045218, which means that each hit by a batter will increase the `TARGET_WINS` by 0.045. In addition, the coefficient estimate for `TEAM_BATTING_BB` is 0.034136, which indicates that every walk by a batter increases the `TARGET_WINS` by 0.034. Both `TEAM_BATTING_H` and `TEAM_BATTING_BB` have a p-value less than 0.05 so they are statistically significant in predicting the number of wins. On the other hand,  `TEAM_BATTING_2B` has a coefficient of -0.04206 with a p-value of 0.603. The negative coefficient suggests that the more doubles a team has, the lower amount of wins. However, since the p-value is so high, we cannot say there is a relationship between the number of doubles and the number of wins. 
 
+The residual standard error of 13.92 indicates that the typical difference between the observed and predicted number of wins is 14 wins. This error is relatively large considering the average wins is 80.79. Also, the Multiple R-squared value of 0.2196 indicates that about 22% of the variability in wins can be explained by this multiple linear regression model. Lastly, the p-value of the model is <2.2e-16, signifies that this model is statistically significant in predicting the number of wins.
 
+In summary, while this model is statistically significant in predicting the number of wins, we would not use it as the R-squared is low at 0.22 and the standard error is relatively high. Although it makes sense that the increasing the number of hits (`TEAM_BATTING_H`) and walks(`TEAM_BATTING_BB`) increases the amount of wins, it is odd that increasing the amount of doubles decreases the total wins. 
 
+##### Residual Analysis
+```{r}
+layout(matrix(c(1,2,3,4),2,2))
+plot(model)
+```
+
+*Residuals vs Fitted: The residuals are clustered around 60-100, suggesting that the assumption of linearity is not met.
+*Scale-location: The data is not randomly dispersed around the horizontal line so the assumption of homoscedasticity is not met.
+*Normal Q-Q: For the most part, the plot follows the normal line but there are some deviations at the tail.
+
+Judging from the residual plots, this model is not the best fit for predicting the response variable. 
+
+# Appendix: Code for this assignment
+
+```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
