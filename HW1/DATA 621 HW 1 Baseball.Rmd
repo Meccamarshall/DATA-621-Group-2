@@ -11,6 +11,10 @@ output:
 knitr::opts_chunk$set(echo=FALSE,warning = FALSE, message = FALSE)
 ```
 
+```{r}
+print(cor(df))
+```
+
 # Introduction
 
 In this assignment, we are given a baseball training and evaluation dataset, which contains approximately 2200 records. The data spans from 1871 to 2006, with each row representing a baseball team's performance from that year. The statistics were all adjusted to reflect a 162 game season. Our objective is to construct a multiple linear regression model of the training data to predict the number of wins for a team.
@@ -120,9 +124,6 @@ sum(is.na(df))
 ```
 Now there is no more missing values within the dataset.
 
-# Build Models
-
-
 ### Model 1
 
 Lets build a multiple linear regression model with the response variable being TARGET_WINS ans the explanatory variables being TEAM_BATTING_H, TEAM_BATTING_BB, and TEAM_BATTING_2B this is because they had the higher correlation values to the TARGET_WINS variable. I omitted the intercept within the model because if the intercept in a regression model predicting baseball team wins is negative, it suggests that even when all independent variables are set to zero, the model predicts a negative number of wins. This negative prediction essentially indicates that the team is expected to have more losses than wins, which is not realistic or meaningful in the context of baseball. 
@@ -138,6 +139,7 @@ However, the coefficient for "TEAM_BATTING_2B" (Doubles by batters) is approxima
 
 Despite this inconsistency, the overall model demonstrates a strong ability to explain win variance, with an adjusted R-squared value of 0.9714. This indicates that the model accounts for a significant portion of the variability in wins based on the included variables. Therefore, it may be advisable to retain the model for further analysis and refinement.
 The residual standard error of 13.92 indicates that the typical difference between the observed and predicted number of wins is 14 wins. This error is relatively large considering the average wins is 80.79. Also, the Multiple R-squared value of 0.2196 indicates that about 22% of the variability in wins can be explained by this multiple linear regression model. Lastly, the p-value of the model is <2.2e-16, signifies that this model is statistically significant in predicting the number of wins.
+
 In summary, while this model is statistically significant in predicting the number of wins, we would not use it as the R-squared is low at 0.22 and the standard error is relatively high. Although it makes sense that the increasing the number of hits (`TEAM_BATTING_H`) and walks(`TEAM_BATTING_BB`) increases the amount of wins, it is odd that increasing the amount of doubles decreases the total wins. 
 
 
@@ -154,6 +156,33 @@ plot(model)
 *Normal Q-Q: For the most part, the plot follows the normal line but there are some deviations at the tail.
 
 Judging from the residual plots, this model is not the best fit for predicting the response variable. 
+
+### Model 2
+
+Let's construct a multiple linear regression model with the response variable as TARGET_WINS and additional explanatory variables as TEAM_PITCHING_H, TEAM_PITCHING_HR, and TEAM_PITCHING_BB. This selection is based on their correlation coefficients with TARGET_WINS: TEAM_PITCHING_H (-0.10993705), TEAM_PITCHING_HR (0.18901373), and TEAM_PITCHING_BB (0.124174536). Despite TEAM_PITCHING_H having a negative correlation coefficient, indicating a potentially negative impact on wins, it's essential to consider its significance in the model along with the positive coefficients of TEAM_PITCHING_HR and TEAM_PITCHING_BB. By including these variables, we aim to capture the collective influence of pitching-related statistics on the number of wins in our dataset.
+```{r}
+model2 <- lm(TARGET_WINS ~ TEAM_BATTING_H + TEAM_BATTING_BB + TEAM_BATTING_2B +  TEAM_PITCHING_H + TEAM_PITCHING_HR + TEAM_PITCHING_BB + 0, data = df)
+
+summary(model2)
+```
+The coefficients obtained from our multiple linear regression model shed light on the relationship between specific baseball metrics and the number of wins. For instance, the coefficient for "TEAM_BATTING_H" (Base Hits by batters) suggests that each additional base hit is associated with around 0.044 more wins, holding other variables constant. Similarly, the coefficient for "TEAM_BATTING_BB" (Walks allowed) indicates that each additional walk allowed by the pitching team correlates with around 0.034 more wins.
+
+However, the coefficient for "TEAM_BATTING_2B" (Doubles by batters) is statistically insignificant (p-value = 0.679), suggesting that the number of doubles by batters may not significantly impact wins. This finding may seem counterintuitive, as one might expect teams with more doubles to win more games.
+
+Despite this inconsistency, the overall model demonstrates a strong ability to explain win variance, with an adjusted R-squared value of 0.9714. Therefore, it may be advisable to retain the model for further analysis and refinement.
+
+### Residual Analysis
+```{r}
+layout(matrix(c(1,2,3,4),2,2))
+plot(model2)
+```
+
+*Residuals vs Fitted: The residuals are clustered around 60-100, suggesting that the assumption of linearity is not met.
+*Scale-location: 
+The previous plot showed a more uniform distribution of residuals across fitted values, while the current plot exhibits a dip in residuals around the range of 60 to 100 fitted values, indicating potential heteroscedasticity or a distinct pattern of variability in that range.
+*Normal Q-Q: For the most part, the plot follows the normal line but there are some deviations at the tail.
+*Residuals vs Leverage: We see a concentration of points toward the left end of the x-axis in the plot which suggests the presence of influential data points with high leverage, indicating they have a significant impact on the regression model's coefficients.
+
 
 # Appendix: Code for this assignment
 
