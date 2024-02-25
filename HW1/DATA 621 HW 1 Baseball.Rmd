@@ -153,7 +153,7 @@ However, the coefficient for "TEAM_BATTING_2B" (Doubles by batters) is approxima
 Despite this inconsistency, the overall model demonstrates a strong ability to explain win variance, with an adjusted R-squared value of 0.9714. This indicates that the model accounts for a significant portion of the variability in wins based on the included variables. Therefore, it may be advisable to retain the model for further analysis and refinement.
 
 
-##### Residual Analysis - Model 2
+#### Residual Analysis - Model 2
 ```{r echo=FALSE, out.width='70%', fig.align='center'}
 layout(matrix(c(1,2,3,4),2,2))
 plot(model2)
@@ -179,7 +179,7 @@ However, the coefficient for "TEAM_BATTING_2B" (Doubles by batters) is statistic
 
 Despite this inconsistency, the overall model demonstrates a strong ability to explain win variance, with an adjusted R-squared value of 0.9714. Therefore, it may be advisable to retain the model for further analysis and refinement.
 
-##### Residual Analysis - Model 3
+#### Residual Analysis - Model 3
 ```{r echo=FALSE, out.width='70%', fig.align='center'}
 layout(matrix(c(1,2,3,4),2,2))
 plot(model3)
@@ -202,7 +202,7 @@ These results of the coefficient estimates are a bit surprising as I was expecti
 
 Like the previous models, the R-squared is high at 0.9717 so 97% of the variance in the response model can be attributed to this model. In addition, all of the p-values for these variables are low, indicating that they are statistically significant predictors in this model. But, the magnitude of these coefficients is quite small, which suggests the practical significance of these predictors in this model. Overall, while this model has strong statistical significance, the coefficients do not match with our conception of baseball so it will need further refinement. 
 
-##### Residual Analysis - Model 4
+#### Residual Analysis - Model 4
 ```{r echo=FALSE, out.width='70%', fig.align='center'}
 layout(matrix(c(1,2,3,4),2,2))
 plot(model4)
@@ -235,7 +235,7 @@ for (name in names(models)) {
 
 Based on all of our multiple linear regression models, model 3 seems to have performed best. In comparison to the other models, model 3 has the highest R-squared value at 0.9724, the lowest MSE at 186.97, and the lowest RMSE at 13.67. In addition, the p-value for the coefficient estimates and for the f-statistic were all statistically significant. Also, we did take into account whether the models made practical sense. We concluded that all the models seem to have one or more variables that seem counterinituitive and they all have residual plots that suggest a linear model might not be the best fit for the data. Thus, we decided to go with the model that the highest R-squared and lowest RMSE, which was model 3.  
 
-##### Predicing the evaluation data set
+#### Predicting the evaluation data set
 We will use our trained model to predict the number of wins in the evaluation dataset. Here is a summary of the evaluation dataset:
 ```{r warning=FALSE}
 train <- read_csv("https://raw.githubusercontent.com/LeJQC/DATA-621-Group-2/main/HW1/moneyball-evaluation-data.csv", show_col_types = FALSE)
