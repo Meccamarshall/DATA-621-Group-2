@@ -37,9 +37,9 @@ glimpse(df)
 
 ### Summary table
 
-We can see from the summary, that the mean of `TARGET_WINS` is 80.79, which is about half the games in a baseball season. There are also a couple of columns with NA values, specifically `TEAM_BATTING_HBP` has over 2000 missing values.
+We can see from the summary, that the mean of `TARGET_WINS` is 80.79, which is about half the games in a baseball season. For the most part, most variables have 2276 values but there are some, `TEAM_BATTING_HBP` in particular, have less, suggesting that there is missing data. 
 
-```{r}
+```{r warning=FALSE}
 # Setting index column to index
 rownames(df) <- df$INDEX
 df$INDEX <- NULL
@@ -126,9 +126,9 @@ Now there is no more missing values within the dataset.
 For this model, we are going to use the three variables that were most linearly correlated to target wins: `TEAM_BATTING_H` (0.39), `TEAM_BATTING_2B` (0.29), `TEAM_BATTING_BB` (0.23).
 
 ```{r}
-model <- lm(TARGET_WINS ~ TEAM_BATTING_H + TEAM_BATTING_2B + TEAM_BATTING_BB, data = df)
+model1 <- lm(TARGET_WINS ~ TEAM_BATTING_H + TEAM_BATTING_2B + TEAM_BATTING_BB, data = df)
 
-summary(model)
+summary(model1)
 ```
 
 The coefficient estimate for `TEAM_BATTING_H` is 0.045218, which means that each hit by a batter will increase the `TARGET_WINS` by 0.045. In addition, the coefficient estimate for `TEAM_BATTING_BB` is 0.034136, which indicates that every walk by a batter increases the `TARGET_WINS` by 0.034. Both `TEAM_BATTING_H` and `TEAM_BATTING_BB` have a p-value less than 0.05 so they are statistically significant in predicting the number of wins. On the other hand,  `TEAM_BATTING_2B` has a coefficient of -0.04206 with a p-value of 0.603. The negative coefficient suggests that the more doubles a team has, the lower amount of wins. However, since the p-value is so high, we cannot say there is a relationship between the number of doubles and the number of wins. 
@@ -154,7 +154,7 @@ Despite this inconsistency, the overall model demonstrates a strong ability to e
 
 
 ##### Residual Analysis - Model 2
-```{r}
+```{r echo=FALSE, out.width='70%', fig.align='center'}
 layout(matrix(c(1,2,3,4),2,2))
 plot(model2)
 ```
@@ -180,7 +180,7 @@ However, the coefficient for "TEAM_BATTING_2B" (Doubles by batters) is statistic
 Despite this inconsistency, the overall model demonstrates a strong ability to explain win variance, with an adjusted R-squared value of 0.9714. Therefore, it may be advisable to retain the model for further analysis and refinement.
 
 ##### Residual Analysis - Model 3
-```{r}
+```{r echo=FALSE, out.width='70%', fig.align='center'}
 layout(matrix(c(1,2,3,4),2,2))
 plot(model3)
 ```
@@ -203,15 +203,76 @@ These results of the coefficient estimates are a bit surprising as I was expecti
 Like the previous models, the R-squared is high at 0.9717 so 97% of the variance in the response model can be attributed to this model. In addition, all of the p-values for these variables are low, indicating that they are statistically significant predictors in this model. But, the magnitude of these coefficients is quite small, which suggests the practical significance of these predictors in this model. Overall, while this model has strong statistical significance, the coefficients do not match with our conception of baseball so it will need further refinement. 
 
 ##### Residual Analysis - Model 4
-```{r}
+```{r echo=FALSE, out.width='70%', fig.align='center'}
 layout(matrix(c(1,2,3,4),2,2))
 plot(model4)
 ```
 These residual plots are similar to the previous models. The plots suggest some issues with the assumptions of homoscedasticity and linearity. Therefore a linear regression model may not be the best fit for the data.
 
 # 4. Select Models
+To evaluate the performance of the models, let's look at the R-squared, Mean Squared Error, and Root Mean Squared Error. 
+```{r}
+models <- list(model1, model2, model3,model4)  
+names(models) <- c("Model 1", "Model 2", "Model 3", "Model 4")  
+
+# Function to calculate RMSE
+rmse <- function(actual, predicted) {
+  sqrt(mean((actual - predicted)^2))
+}
+
+# Evaluate the models
+for (name in names(models)) {
+  model <- models[[name]]
+  predictions <- predict(model, newdata = df)
+  actual_values <- df$TARGET_WINS  
+  
+  cat(paste("\n", name, "\n"))
+  cat(paste("Adjusted R-squared: ", summary(model)$adj.r.squared, "\n"))
+  cat(paste("MSE: ", mean((predictions - actual_values)^2), "\n"))
+  cat(paste("RMSE: ", rmse(actual_values, predictions), "\n"))
+}
+```
+
+Based on all of our multiple linear regression models, model 3 seems to have performed best. In comparison to the other models, model 3 has the highest R-squared value at 0.9724, the lowest MSE at 186.97, and the lowest RMSE at 13.67. In addition, the p-value for the coefficient estimates and for the f-statistic were all statistically significant. Also, we did take into account whether the models made practical sense. We concluded that all the models seem to have one or more variables that seem counterinituitive and they all have residual plots that suggest a linear model might not be the best fit for the data. Thus, we decided to go with the model that the highest R-squared and lowest RMSE, which was model 3.  
+
+##### Predicing the evaluation data set
+We will use our trained model to predict the number of wins in the evaluation dataset. Here is a summary of the evaluation dataset:
+```{r warning=FALSE}
+train <- read_csv("https://raw.githubusercontent.com/LeJQC/DATA-621-Group-2/main/HW1/moneyball-evaluation-data.csv", show_col_types = FALSE)
+
+rownames(train) <- train$INDEX
+
+train$INDEX <- NULL
+
+# Deleting HBP column as it has too much missing data
+train <- train %>% select(-TEAM_BATTING_HBP)
+
+na_variables <- c("TEAM_BATTING_SO", "TEAM_BASERUN_SB", "TEAM_BASERUN_CS", "TEAM_PITCHING_SO", "TEAM_FIELDING_DP")
+
+# Setting the missing values to the median
+for (col in na_variables) {
+  median_value <- median(train[[col]], na.rm = TRUE)
+  train[[col]][is.na(train[[col]])] <- median_value
+}
+
+summary(train)
+```
+
+```{r warning=FALSE}
+# Looking at the predicts based on our model
+predictions <- predict(model3, newdata = train)
+actual_values <- df$TARGET_WINS
 
 
+mse <- mean((predictions - actual_values)^2)
+rmse <- sqrt(mse)
+
+
+print("Model 3: Evaluation data")
+print(paste("Mean Squared Error: ", mse))
+print(paste("Root Mean Squared Error: ", rmse))
+```
+When model 3 was applied to the evaluation data, the RSME increased from 13.67 to 18.17, which suggests that the model's predictions are not as accurate on the evaluation data as they were on the training data. The high R-squared value of the model on the training data is an indication that there is possible overfitting. This means that the model is good at predicting data from the training dataset but not unseen data in the evaluation set. In conclusion, more work needs to be done so that the model performs well on both seen and unseen data.   
 
 
 # Appendix: Code for this assignment
