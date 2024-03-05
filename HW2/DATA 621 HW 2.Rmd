@@ -1,0 +1,67 @@
+---
+title: "DATA 621 HW 2"
+author: "Jian Quan Chen"
+date: "2024-03-04"
+output: html_document
+---
+
+# Overview
+
+In this homework assignment, you will work through various classification metrics. You will be asked to create functions in R to carry out the various calculations. You will also investigate some functions in packages that will let you obtain the equivalent results. Finally, you will create graphical output that also can be used to evaluate the output of classification models, such as binary logistic regression.
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+
+# 1.
+
+Download the classification output data set (attached in Blackboard to the assignment).
+
+```{r}
+df <- read_csv("https://raw.githubusercontent.com/LeJQC/DATA-621-Group-2/main/HW2/classification-output-data.csv")
+head(df)
+```
+
+# 2.
+
+The data set has three key columns we will use:
+
+-   **class**: the actual class for the observation
+
+-   **scored.class**: the predicted class for the observation (based on a threshold of 0.5)
+
+-   **scored.probability**: the predicted probability of success for the observation
+
+Use the table() function to get the raw confusion matrix for this scored dataset. Make sure you understand the output. In particular, do the rows represent the actual or predicted class? The columns?
+
+# 3.
+
+Write a function that takes the data set as a dataframe, with actual and predicted classifications identified, and returns the accuracy of the predictions.
+
+$$Accuracy = \frac{TP + TN}{TP + FP + TN + FN}$$
+
+# 4.
+
+Write a function that takes the data set as a dataframe, with actual and predicted classifications identified, and returns the classification error rate of the predictions.
+
+$$Classification Error Rate =  \frac{FP + FN}{TP + FP + TN + FN}$$ 
+Verify that you get an accuracy and an error rate that sums to one.
+
+# 5. 
+
+Write a function that takes the data set as a dataframe, with actual and predicted classifications identified, and returns the precision of the predictions.
+
+$$Precision =  \frac{TP}{TP + FP}$$ 
+
+
+
+
+
+
+
+
+
+
+
+
