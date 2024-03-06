@@ -11,6 +11,7 @@ In this homework assignment, you will work through various classification metric
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
+library(caret)
 ```
 
 
@@ -56,7 +57,73 @@ $$Precision =  \frac{TP}{TP + FP}$$
 
 
 
+# 10.  
 
+Write a function that generates an ROC curve from a data set with a true classification column (class in our example) and a probability column (scored.probability in our example). Your function should return a list that includes the plot of the ROC curve and a vector that contains the calculated area under the curve (AUC). Note that I recommend using a sequence of thresholds ranging from 0 to 1 at 0.01 intervals.
+
+
+```{r}
+generate_ROC_curve <- function(data) {
+  # Sort the data by probability in descending order
+  data <- data[order(data$scored.probability, decreasing = TRUE), ]
+  
+  # Initialize variables
+  true_positive_rate <- numeric()
+  false_positive_rate <- numeric()
+  auc <- 0
+  
+  # Calculate total number of positive and negative instances
+  total_positive <- sum(data$class == 1)
+  total_negative <- sum(data$class == 0)
+  
+  # Calculate  (TPR) and  (FPR) for each threshold
+  for (threshold in seq(0, 1, by = 0.01)) {
+    predicted_positive <- ifelse(data$scored.probability >= threshold, 1, 0)
+    true_positive <- sum(predicted_positive == 1 & data$class == 1)
+    false_positive <- sum(predicted_positive == 1 & data$class == 0)
+    true_positive_rate <- c(true_positive_rate, true_positive / total_positive)
+    false_positive_rate <- c(false_positive_rate, false_positive / total_negative)
+  }
+  
+  # Calculate AUC
+  for (i in 1:(length(true_positive_rate) - 1)) {
+    auc <- auc + (true_positive_rate[i] + true_positive_rate[i + 1]) * (false_positive_rate[i + 1] - false_positive_rate[i]) / 2
+  }
+  
+  # Plot ROC curve
+  plot(false_positive_rate, true_positive_rate, type = "l", col = "blue", xlab = "False Positive Rate", ylab = "True Positive Rate", main = "ROC Curve")
+  
+  # Add diagonal line
+  abline(0, 1, col = "red")
+  
+  # Return list with plot and AUC
+  return(list(roc_curve = plot(false_positive_rate, true_positive_rate, type = "l", col = "blue", xlab = "False Positive Rate", ylab = "True Positive Rate", main = "ROC Curve"), auc = auc))
+}
+
+set.seed(123)
+
+result <- generate_ROC_curve(df)
+
+# Access the ROC curve plot
+result$roc_curve
+
+# Access the AUC value
+result$auc
+
+```
+
+
+```{r}
+cm <- confusionMatrix(data$class, ifelse(data$scored.probability >= 0.5, 1, 0))
+print(cm)
+
+```
+
+```{r}
+specificity <- specificity(data$class, ifelse(data$scored.probability >= 0.5, 1, 0))
+print(specificity)
+
+```
 
 
 
