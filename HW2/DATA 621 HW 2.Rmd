@@ -12,6 +12,8 @@ In this homework assignment, you will work through various classification metric
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 library(caret)
+library(pROC)
+library(ROCR)
 ```
 
 
@@ -128,69 +130,104 @@ Write a function that generates an ROC curve from a data set with a true classif
 
 ```{r}
 generate_ROC_curve <- function(data) {
-  # Sort the data by probability in descending order
+  # Sort the data 
   data <- data[order(data$scored.probability, decreasing = TRUE), ]
   
-  # Initialize variables
+
   true_positive_rate <- numeric()
   false_positive_rate <- numeric()
   auc <- 0
   
-  # Calculate total number of positive and negative instances
   total_positive <- sum(data$class == 1)
   total_negative <- sum(data$class == 0)
   
-  # Calculate  (TPR) and  (FPR) for each threshold
+  # Initialize variables for ROC curve points
+  roc_points <- data.frame(TPR = numeric(), FPR = numeric())
+  
   for (threshold in seq(0, 1, by = 0.01)) {
     predicted_positive <- ifelse(data$scored.probability >= threshold, 1, 0)
     true_positive <- sum(predicted_positive == 1 & data$class == 1)
     false_positive <- sum(predicted_positive == 1 & data$class == 0)
-    true_positive_rate <- c(true_positive_rate, true_positive / total_positive)
-    false_positive_rate <- c(false_positive_rate, false_positive / total_negative)
+    tpr <- true_positive / total_positive
+    fpr <- false_positive / total_negative
+    
+    roc_points <- rbind(roc_points, cbind(TPR = tpr, FPR = fpr))
   }
   
-  # Calculate AUC
-  for (i in 1:(length(true_positive_rate) - 1)) {
-    auc <- auc + (true_positive_rate[i] + true_positive_rate[i + 1]) * (false_positive_rate[i + 1] - false_positive_rate[i]) / 2
+  # Sort ROC curve points by ascending FPR
+  roc_points <- roc_points[order(roc_points$FPR), ]
+  
+  # Calculate AUC using trapezoidal rule
+  for (i in 1:(nrow(roc_points) - 1)) {
+    auc <- auc + (roc_points$TPR[i] + roc_points$TPR[i + 1]) * (roc_points$FPR[i + 1] - roc_points$FPR[i]) / 2
   }
   
   # Plot ROC curve
-  plot(false_positive_rate, true_positive_rate, type = "l", col = "blue", xlab = "False Positive Rate", ylab = "True Positive Rate", main = "ROC Curve")
+  plot(roc_points$FPR, roc_points$TPR, type = "l", col = "blue", xlab = "False Positive Rate", ylab = "True Positive Rate", main = "ROC Curve")
   
   # Add diagonal line
   abline(0, 1, col = "red")
   
-  # Return list with plot and AUC
-  return(list(roc_curve = plot(false_positive_rate, true_positive_rate, type = "l", col = "blue", xlab = "False Positive Rate", ylab = "True Positive Rate", main = "ROC Curve"), auc = auc))
+  # Return list with AUC value
+  return(list(auc = auc))
 }
 
 set.seed(123)
 
 result <- generate_ROC_curve(df)
 
-# Access the ROC curve plot
-result$roc_curve
-
-# Access the AUC value
+#AUC value
 result$auc
-
 ```
 
 
+# 12.
+
+Investigate the caret package. In particular, consider the functions confusionMatrix, sensitivity, and specificity. Apply the functions to the data set. How do the results compare with your own functions?
+
 ```{r}
-cm <- confusionMatrix(data$class, ifelse(data$scored.probability >= 0.5, 1, 0))
+df$class <- factor(df$class, levels = c(0, 1))
+predicted_class <- factor(ifelse(df$scored.probability >= 0.5, 1, 0), levels = c(0, 1))
+cm <- confusionMatrix(df$class, predicted_class)
 print(cm)
 
 ```
 
+**TO DO: Write comparisons between this value and the value in #3,6,7**
+
 ```{r}
-specificity <- specificity(data$class, ifelse(data$scored.probability >= 0.5, 1, 0))
+specificity <- specificity(df$class, predicted_class)
 print(specificity)
 
 ```
+**TO DO: Write comparisons between this value and the value in #7**
+
+```{r}
+sensitivity <- sensitivity(df$class, predicted_class)
+print(sensitivity)
+```
+**TO DO: Write comparisons between this value and the value in #6**
+
+# 13.
+
+Investigate the pROC package. Use it to generate an ROC curve for the data set.How do the results compare with your own functions?
+
+```{r}
+roc_curve <- roc(df$class, df$scored.probability)
+
+# Plot ROC curve
+plot(roc_curve, main = "ROC Curve", col = "blue", lwd = 2)
+
+# Add diagonal reference line (random classifier)
+abline(a = 0, b = 1, lty = 2)
+
+# Calculate AUC
+auc_score <- auc(roc_curve)
+print(paste("AUC:", auc_score))
+```
 
 
-
+Using the pROC package compared to writing my own function is different  in that the pROC package made it very easy to implement the ROC curve on the data set. Also note that the AUC from the pROC package is .8503 compared to the functions  .8484
 
 
 
