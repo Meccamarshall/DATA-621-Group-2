@@ -36,11 +36,38 @@ The data set has three key columns we will use:
 
 Use the table() function to get the raw confusion matrix for this scored dataset. Make sure you understand the output. In particular, do the rows represent the actual or predicted class? The columns?
 
+```{r}
+confusion_matrix <- table(df$class, df$scored.class)
+
+print(confusion_matrix)
+```
+
+The table() function here is used to count how many times each combination of actual and predicted classes occur. In this confusion matrix, the rows represent the actual `class` and the columns represent the predicted `class` for the observation. Looking at the first row, there were 119 instances of True Negatives and 5 instances of False Positives. In the second row, there are 30 instances of False Negatives and 27 instances of True Positives. 
+
 # 3.
 
 Write a function that takes the data set as a dataframe, with actual and predicted classifications identified, and returns the accuracy of the predictions.
 
 $$Accuracy = \frac{TP + TN}{TP + FP + TN + FN}$$
+
+```{r}
+calculate_accuracy <- function(df) {
+  confusion_matrix <- table(df$class, df$scored.class)
+  
+  TP <- confusion_matrix[2, 2]
+  TN <- confusion_matrix[1, 1]
+  FP <- confusion_matrix[1, 2]
+  FN <- confusion_matrix[2, 1]
+  
+  accuracy <- (TP + TN) / (TP + FP + TN + FN)
+  
+  return(accuracy)
+}
+
+accuracy <- calculate_accuracy(df)
+print(accuracy)
+```
+The accuracy of the predictions is 0.8066.
 
 # 4.
 
@@ -49,13 +76,50 @@ Write a function that takes the data set as a dataframe, with actual and predict
 $$Classification Error Rate =  \frac{FP + FN}{TP + FP + TN + FN}$$ 
 Verify that you get an accuracy and an error rate that sums to one.
 
+```{r}
+calculate_error_rate <- function(df) {
+  confusion_matrix <- table(df$class, df$scored.class)
+  
+  TP <- confusion_matrix[2, 2]
+  TN <- confusion_matrix[1, 1]
+  FP <- confusion_matrix[1, 2]
+  FN <- confusion_matrix[2, 1]
+  
+  error_rate <- (FP + FN) / (TP + FP + TN + FN)
+  
+  return(error_rate)
+}
+
+error_rate <- calculate_error_rate(df)
+print(paste("Error Rate: ", error_rate))
+
+accuracy <- calculate_accuracy(df)
+print(paste("Accuracy: ", accuracy))
+
+print(paste("Sum: ", accuracy + error_rate))
+```
+
 # 5. 
 
 Write a function that takes the data set as a dataframe, with actual and predicted classifications identified, and returns the precision of the predictions.
 
 $$Precision =  \frac{TP}{TP + FP}$$ 
 
+```{r}
+calculate_precision <- function(df) {
+  confusion_matrix <- table(df$class, df$scored.class)
+  
+  TP <- confusion_matrix[2, 2]
+  FP <- confusion_matrix[1, 2]
+  
+  precision <- TP / (TP + FP)
+  
+  return(precision)
+}
 
+precision <- calculate_precision(df)
+print(precision)
+```
 
 # 10.  
 
