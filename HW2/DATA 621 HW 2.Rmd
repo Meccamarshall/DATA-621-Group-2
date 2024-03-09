@@ -123,6 +123,69 @@ precision <- calculate_precision(df)
 print(precision)
 ```
 
+# 6.
+
+Write a function that takes the data set as a dataframe, with actual and predicted classifications identified,
+and returns the sensitivity of the predictions. Sensitivity is also known as recall.
+
+
+$$Sensitivity =  \frac{TP}{TP + FN}$$ 
+```{r}
+func_sensitivity <- function(df){
+  FN <- sum(df$class == 1 & df$scored.class ==0)
+  TP <- sum(df$class == 1 & df$scored.class ==1)
+  return(TP/(TP+FN))
+}
+
+sensitivity <- func_sensitivity(df)
+print(sensitivity)
+```
+
+# 7.
+
+Write a function that takes the data set as a dataframe, with actual and predicted classifications identified,
+and returns the specificity of the predictions.
+
+$$Specificity =  \frac{TN}{TN + FP}$$ 
+```{r}
+func_specificity <- function(df){
+  TN <- sum(df$class == 0 & df$scored.class ==0)
+  FP <- sum(df$class == 0 & df$scored.class ==1)
+  return(TN/(TN+FP))
+}
+
+specificity <- func_specificity(df)
+print(specificity)
+```
+
+# 8.
+
+Write a function that takes the data set as a dataframe, with actual and predicted classifications identified,
+and returns the F1 score of the predictions
+
+
+$$F1 Score =  \frac{2 * Precision * Sensitivity }{Precision + Sensitivity}$$
+
+```{r}
+f1 <- function(df){
+  ## Call the previously defined functions
+  precision <- calculate_precision(df)
+  sensitivity <- func_sensitivity(df) 
+  
+  ## Calculate F1 score
+  f1_score <- (2 * precision * sensitivity)/(precision + sensitivity)
+  return(f1_score)
+}
+(f1_score <-  f1(df))
+```
+
+# 9.
+
+Before we move on, let’s consider a question that was asked: What are the bounds on the F1 score? Show
+that the F1 score will always be between 0 and 1. (Hint: If 0 < 𝑎 < 1 and 0 < 𝑏 < 1 then 𝑎𝑏 < 𝑎.)
+
+We determine the F1 score by considering both precision and sensitivity. As precision and sensitivity values range from 0 to 1, any computation involving values within this range will yield results within the same boundaries. Consequently, the F1 score will always fall between 0 and 1.
+
 # 10.  
 
 Write a function that generates an ROC curve from a data set with a true classification column (class in our example) and a probability column (scored.probability in our example). Your function should return a list that includes the plot of the ROC curve and a vector that contains the calculated area under the curve (AUC). Note that I recommend using a sequence of thresholds ranging from 0 to 1 at 0.01 intervals.
