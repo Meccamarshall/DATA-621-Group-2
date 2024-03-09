@@ -1,3 +1,3 @@
 DATA 621 Group 2 
 
-Assignments
+Tilon Bobb, Jian Quan Chen, Shamecca Marshall
